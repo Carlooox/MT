@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="es" style="background-color: #F8F6FC; color-scheme: light;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MT — Mom Time | Tiempo para Ti</title>
+
+  <!-- Metadatos PWA para instalación en móviles (iOS / Android / Desktop) -->
+  <meta name="theme-color" content="#F8F6FC" />
+  <meta name="description" content="Asistente inteligente y horario con alarmas para que las mamás administren su tiempo, deleguen tareas y rescaten espacio para su autocuidado." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="MT Mom Time" />
+
+  <!-- Ícono SVG embebido estilo pastel lavanda y rosa como en el video -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23F497A9'/%3E%3Cstop offset='100%25' stop-color='%239B7EDE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='34' fill='url(%23g)'/%3E%3Ccircle cx='60' cy='60' r='36' fill='none' stroke='%23FFFFFF' stroke-width='6'/%3E%3Cpath d='M60 36v24l15 10' fill='none' stroke='%23FFFFFF' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='88' cy='32' r='9' fill='%2368D3C8'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23F497A9'/%3E%3Cstop offset='100%25' stop-color='%239B7EDE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='34' fill='url(%23g)'/%3E%3Ccircle cx='60' cy='60' r='36' fill='none' stroke='%23FFFFFF' stroke-width='6'/%3E%3Cpath d='M60 36v24l15 10' fill='none' stroke='%23FFFFFF' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='88' cy='32' r='9' fill='%2368D3C8'/%3E%3C/svg%3E" />
+
+  <!-- Tipografía Inter desde Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS con la paleta pastel del video -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            lilacBg: '#F8F6FC',
+            lilacBorder: '#ECE7F6',
+            plum: '#2E293A',
+            mauve: '#7B738E',
+            lavender: '#9B7EDE',
+            lavenderDark: '#8264C9',
+            lavenderSoft: '#F0EBFA',
+            blush: '#F28B9C',
+            blushSoft: '#FDECEF',
+            peach: '#F5A36C',
+            peachSoft: '#FFF1E6',
+            mint: '#58C4B8',
+            mintSoft: '#E5F7F5',
+            skyPastel: '#6BB5EB',
+            skySoft: '#EBF5FD',
+            periwinkle: '#7986CB',
+            periwinkleSoft: '#ECEEFA',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Tone.js para melodías de alarma y recordatorios suaves sin archivos externos -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+</head>
+<body style="background-color: #F8F6FC; color: #2E293A;" class="bg-lilacBg text-plum font-sans antialiased selection:bg-lavender/20 selection:text-plum min-h-screen flex flex-col relative overflow-x-hidden">
+
+  <!-- Resplandores pastel suaves de fondo (idénticos a la pantalla de inicio del video) -->
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute -top-24 -right-20 w-80 h-80 rounded-full bg-blush/15 blur-3xl"></div>
+    <div class="absolute top-36 -left-24 w-72 h-72 rounded-full bg-lavender/15 blur-3xl"></div>
+    <div class="absolute bottom-10 right-0 w-72 h-72 rounded-full bg-mint/15 blur-3xl"></div>
+  </div>
+
+  <!-- Barra Superior Fija (Estilo "Mi Día" del video) -->
+  <header class="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-lilacBorder px-4 py-3 sm:px-6">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+      <!-- Identidad MT (Mom Time) con ícono circular de reloj pastel -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blushSoft via-lavenderSoft to-mintSoft border border-lavender/30 flex items-center justify-center shadow-xs relative shrink-0">
+          <!-- Emblema circular del reloj de Mom Time -->
+          <svg class="w-6 h-6 text-lavenderDark" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="2.4" stroke-dasharray="3 2" />
+            <circle cx="18" cy="18" r="9.5" stroke="#F28B9C" stroke-width="2.2" />
+            <path d="M18 13v5.5l3.5 2.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="w-2.5 h-2.5 rounded-full bg-mint border-2 border-white absolute bottom-0 right-0" title="Asistente activo"></span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-extrabold text-base sm:text-lg leading-tight text-plum tracking-tight">MT <span class="font-semibold text-lavenderDark">Mom Time</span></h1>
+            <span id="live-clock" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-lavenderSoft text-lavenderDark tabular-nums">--:--</span>
+          </div>
+          <p id="header-greeting" class="text-xs text-mauve truncate max-w-[185px] sm:max-w-xs">Tiempo para ti • Sin estrés</p>
+        </div>
+      </div>
+
+      <!-- Acciones Rápidas: Modo Imprevisto & Instalar PWA -->
+      <div class="flex items-center gap-2">
+        <button
+          onclick="openUnexpectedModal()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full bg-peachSoft hover:bg-peach/20 text-amber-900 border border-peach/30 text-xs font-semibold transition active:scale-95"
+          title="Reajustar horario si surgió un imprevisto"
+        >
+          <svg class="w-4 h-4 text-peach shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="hidden sm:inline">Llegó un imprevisto</span>
+          <span class="sm:hidden">Imprevisto</span>
+        </button>
+
+        <button
+          id="btn-install-pwa"
+          onclick="openPwaModal()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full bg-gradient-to-r from-blush to-lavender text-white text-xs font-semibold shadow-xs hover:opacity-95 transition active:scale-95"
+          title="Instalar app MT en tu dispositivo"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span class="hidden md:inline">Instalar App</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner de Activación de Audio (pastel menta suave) -->
+  <div id="audio-banner" class="bg-mintSoft/90 border-b border-mint/25 px-4 py-2.5">
+    <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 text-xs sm:text-sm text-plum">
+        <span class="w-2 h-2 rounded-full bg-mint animate-pulse shrink-0"></span>
+        <span>Activa el sonido de tus alarmas para escuchar los recordatorios suaves.</span>
+      </div>
+      <button
+        onclick="enableAudioAndTest()"
+        class="shrink-0 px-3.5 py-1.5 rounded-full bg-mint hover:bg-mint/90 text-white text-xs font-bold shadow-xs transition active:scale-95"
+      >
+        Activar sonido
+      </button>
+    </div>
+  </div>
+
+  <!-- Navegación Desktop / Tablet Superior -->
+  <nav class="hidden sm:block bg-white/75 border-b border-lilacBorder px-6">
+    <div class="max-w-4xl mx-auto flex items-center justify-between py-2">
+      <div class="flex items-center gap-2">
+        <button onclick="switchTab('schedule')" data-nav="schedule" class="nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          <span>Mi Día y Alarmas</span>
+        </button>
+        <button onclick="switchTab('tasks')" data-nav="tasks" class="nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <span>Familia y Comunidad</span>
+        </button>
+        <button onclick="switchTab('assistant')" data-nav="assistant" class="nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+          <span>Espacio Mom Time</span>
+        </button>
+        <button onclick="switchTab('settings')" data-nav="settings" class="nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <span>Alarmas y Rutinas</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 pt-4 pb-28 sm:px-6 sm:pb-12">
+
+    <!-- ========================================== -->
+    <!-- PESTAÑA 1: MI DÍA Y ALARMAS (ESTILO VIDEO) -->
+    <!-- ========================================== -->
+    <section id="view-schedule" class="space-y-5">
+
+      <!-- Tarjeta Resumen: Próxima Alarma + Meta Mom Time -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <!-- Spotlight Próxima Actividad / Alarma -->
+        <div class="md:col-span-7 bg-white rounded-3xl p-5 border border-lilacBorder shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blush">
+                <span class="w-2 h-2 rounded-full bg-blush animate-ping"></span>
+                Próximo recordatorio
+              </span>
+              <button
+                onclick="triggerDemoAlarm()"
+                class="text-xs font-semibold text-lavenderDark hover:text-plum underline decoration-dotted transition"
+              >
+                Simular alarma ahora
+              </button>
+            </div>
+            <div id="next-alarm-card">
+              <!-- Renderizado dinámicamente -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Progreso Diario de Mom Time (Degradado suave lavanda-rosa como el video) -->
+        <div class="md:col-span-5 bg-gradient-to-br from-lavenderSoft via-white to-blushSoft rounded-3xl p-5 border border-lavender/20 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold uppercase tracking-wider text-lavenderDark">Tiempo para Mí</span>
+              <span id="mom-time-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white text-lavenderDark shadow-2xs">0 / 45 min</span>
+            </div>
+            <p class="text-xs text-mauve mb-3">Tu bloque sagrado de calma, ejercicio o descanso personal.</p>
+            <div class="w-full h-3 bg-white rounded-full overflow-hidden p-0.5 border border-lavender/15">
+              <div id="mom-time-bar" class="h-full bg-gradient-to-r from-blush to-lavender rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="mt-4 flex items-center justify-between gap-2">
+            <span id="mom-time-encouragement" class="text-xs font-semibold text-lavenderDark">¡Cada minuto cuenta!</span>
+            <button
+              onclick="quickRescueMomTime(20, 'Tiempo para Mí: Café y calma')"
+              class="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blush to-lavender hover:opacity-95 text-white text-xs font-bold shadow-xs transition active:scale-95 shrink-0"
+            >
+              + Rescatar 20m
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de Herramientas del Horario: Filtros pastel + Agregar Actividad -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <!-- Filtros por categoría -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar" id="category-filters">
+          <button onclick="setCategoryFilter('all')" data-cat="all" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">Todas</button>
+          <button onclick="setCategoryFilter('mom')" data-cat="mom" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">💜 Mom Time</button>
+          <button onclick="setCategoryFilter('hijos')" data-cat="hijos" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">🧡 Hijos</button>
+          <button onclick="setCategoryFilter('hogar')" data-cat="hogar" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">🩵 Hogar</button>
+          <button onclick="setCategoryFilter('cocina')" data-cat="cocina" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">🩷 Cocina</button>
+          <button onclick="setCategoryFilter('trabajo')" data-cat="trabajo" class="cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition">💙 Trabajo</button>
+        </div>
+
+        <button
+          onclick="openActivityModal()"
+          class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-blush to-lavender hover:opacity-95 text-white text-sm font-bold shadow-xs transition active:scale-95 shrink-0"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Agregar actividad</span>
+        </button>
+      </div>
+
+      <!-- Lista Cronológica "Mi Día" (Tarjetas blancas redondeadas con ícono circular pastel a la izquierda como el video) -->
+      <div id="schedule-list" class="space-y-3">
+        <!-- Renderizado dinámicamente -->
+      </div>
+
+      <!-- Widgets Visuales Inferiores de "Mi Día" (Hidratación + Donut Chart Pastel como en el segundo 0:02 del video) -->
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
+        <!-- Widget Izquierdo: Hidratación -->
+        <div id="hydration-widget" class="bg-white rounded-3xl p-4 sm:p-5 border border-lilacBorder shadow-xs flex flex-col items-center justify-between text-center">
+          <!-- Renderizado dinámicamente -->
+        </div>
+
+        <!-- Widget Derecho: Balance del Día (Gráfico Donut Pastel) -->
+        <div id="donut-widget" class="bg-white rounded-3xl p-4 sm:p-5 border border-lilacBorder shadow-xs flex flex-col items-center justify-between text-center">
+          <!-- Renderizado dinámicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================ -->
+    <!-- PESTAÑA 2: FAMILIA Y COMUNIDAD (ESTILO VIDEO)    -->
+    <!-- ================================================ -->
+    <section id="view-tasks" class="hidden space-y-5">
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-lilacBorder shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-plum">Apoyo Familiar y Pendientes Rápidos</h2>
+            <p class="text-xs sm:text-sm text-mauve">Reparte tareas en casa sin cargar todo tú sola y compártelo por WhatsApp con un toque.</p>
+          </div>
+          <button
+            onclick="copyFamilyDelegationList()"
+            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-lavender hover:bg-lavenderDark text-white text-xs sm:text-sm font-bold shadow-xs transition active:scale-95 shrink-0"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>Compartir apoyo familiar</span>
+          </button>
+        </div>
+
+        <!-- Formulario Rápido de Pendiente -->
+        <form onsubmit="addQuickTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-lilacBg p-3.5 rounded-2xl border border-lilacBorder">
+          <input
+            type="text"
+            id="quick-task-input"
+            placeholder="Ej. Sacar la basura, revisar mochila, doblar ropa..."
+            required
+            class="sm:col-span-6 px-3.5 py-2.5 rounded-xl bg-white border border-lilacBorder text-sm focus:outline-none focus:border-lavender"
+          />
+          <select id="quick-task-category" class="sm:col-span-3 px-3 py-2.5 rounded-xl bg-white border border-lilacBorder text-sm focus:outline-none focus:border-lavender">
+            <option value="hogar">🩵 Hogar</option>
+            <option value="cocina">🩷 Cocina</option>
+            <option value="hijos">🧡 Hijos</option>
+            <option value="trabajo">💙 Trabajo</option>
+            <option value="mom">💜 Mom Time</option>
+          </select>
+          <select id="quick-task-assignee" class="sm:col-span-3 px-3 py-2.5 rounded-xl bg-white border border-lilacBorder text-sm focus:outline-none focus:border-lavender">
+            <option value="Mamá">👩 Para mí (Mamá)</option>
+            <option value="Pareja">🤝 Pedir a Pareja</option>
+            <option value="Hijos">👧👦 Pedir a Hijos</option>
+            <option value="Familia">🏡 Equipo Familiar</option>
+          </select>
+          <button
+            type="submit"
+            class="sm:col-span-12 py-2.5 rounded-full bg-gradient-to-r from-blush to-lavender hover:opacity-95 text-white text-sm font-bold transition active:scale-98"
+          >
+            + Agregar a la lista
+          </button>
+        </form>
+      </div>
+
+      <!-- Listado de Pendientes -->
+      <div id="quick-tasks-list" class="space-y-2.5">
+        <!-- Renderizado dinámicamente -->
+      </div>
+
+      <!-- Rincón Grupo de Apoyo (Inspirado en la pantalla de Comunidad del video 0:04) -->
+      <div class="bg-white rounded-3xl p-5 border border-lilacBorder shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-blushSoft text-blush flex items-center justify-center font-bold text-sm">💗</div>
+            <div>
+              <p class="text-sm font-bold text-plum">Consejo del Grupo de Apoyo</p>
+              <span class="inline-block px-2.5 py-0.5 rounded-full bg-lavenderSoft text-lavenderDark text-[11px] font-semibold">Comunidad Mom Time</span>
+            </div>
+          </div>
+          <button onclick="showToast('💗 ¡Gracias por compartir cariño en la comunidad!')" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blushSoft text-blush text-xs font-bold hover:bg-blush/20 transition">
+            <span>❤️</span> <span>24</span>
+          </button>
+        </div>
+        <p class="text-xs sm:text-sm text-mauve leading-relaxed">
+          “Dividir la limpieza en bloques de 20 minutos con alarma y asignar una tarea diaria a cada miembro de la familia me devolvió una hora libre cada tarde.”
+        </p>
+      </div>
+    </section>
+
+    <!-- ================================================ -->
+    <!-- PESTAÑA 3: ESPACIO MOM TIME (SANTUARIO CALMA)     -->
+    <!-- ================================================ -->
+    <section id="view-assistant" class="hidden space-y-5">
+      <!-- Tarjeta Santuario Pastel con Orbe Luminoso (Inspirado en el segundo 0:06 del video) -->
+      <div class="rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden border border-lilacBorder shadow-xs bg-gradient-to-b from-mintSoft via-peachSoft to-lavenderSoft">
+        <!-- Orbe central luminoso -->
+        <div class="w-24 h-24 rounded-full mx-auto mb-4 bg-white/80 shadow-lg shadow-lavender/20 flex items-center justify-center relative">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-blush/40 via-peach/30 to-mint/40 animate-pulse flex items-center justify-center">
+            <span class="text-2xl">🌸</span>
+          </div>
+        </div>
+        <span class="inline-block px-3.5 py-1 rounded-full bg-white/80 text-lavenderDark text-xs font-bold mb-2 shadow-2xs">
+          Santuario Mom Time
+        </span>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-plum mb-1.5">Tu bienestar es primero</h2>
+        <p class="text-xs sm:text-sm text-mauve max-w-md mx-auto leading-relaxed">
+          Tómate un respiro. Elige un bloque de descanso o autocuidado y lo agendaremos automáticamente en tu siguiente espacio libre con alarma suave.
+        </p>
+      </div>
+
+      <!-- Acciones de Rescate de Tiempo Personal -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-lilacBorder shadow-xs">
+        <h3 class="text-base font-bold text-plum mb-1">Agendar un espacio para mí hoy</h3>
+        <p class="text-xs text-mauve mb-4">Toca cualquiera de estas opciones para reservarla en tu horario:</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button onclick="quickRescueMomTime(25, 'Descanso y siesta reparadora')" class="text-left p-4 rounded-2xl bg-lavenderSoft/70 hover:bg-lavenderSoft border border-lavender/20 transition flex items-start gap-3">
+            <span class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-2xs shrink-0">😴</span>
+            <div>
+              <p class="font-bold text-sm text-plum">Siesta o descanso (25 min)</p>
+              <p class="text-xs text-mauve mt-0.5">Recarga tu energía física y baja el ritmo.</p>
+            </div>
+          </button>
+
+          <button onclick="quickRescueMomTime(30, 'Tiempo para Mí: Yoga o caminata')" class="text-left p-4 rounded-2xl bg-mintSoft/70 hover:bg-mintSoft border border-mint/25 transition flex items-start gap-3">
+            <span class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-2xs shrink-0">🧘‍♀️</span>
+            <div>
+              <p class="font-bold text-sm text-plum">Yoga o paseo suave (30 min)</p>
+              <p class="text-xs text-mauve mt-0.5">Estira tu cuerpo y despeja tu mente.</p>
+            </div>
+          </button>
+
+          <button onclick="quickRescueMomTime(15, 'Café o té caliente en calma')" class="text-left p-4 rounded-2xl bg-peachSoft/80 hover:bg-peachSoft border border-peach/25 transition flex items-start gap-3">
+            <span class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-2xs shrink-0">☕</span>
+            <div>
+              <p class="font-bold text-sm text-plum">Café caliente sin prisas (15 min)</p>
+              <p class="text-xs text-mauve mt-0.5">Una pausa breve solo para disfrutar.</p>
+            </div>
+          </button>
+
+          <button onclick="quickRescueMomTime(20, 'Ritual de autocuidado y lectura')" class="text-left p-4 rounded-2xl bg-blushSoft/80 hover:bg-blushSoft border border-blush/25 transition flex items-start gap-3">
+            <span class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl shadow-2xs shrink-0">✨</span>
+            <div>
+              <p class="font-bold text-sm text-plum">Skincare o lectura (20 min)</p>
+              <p class="text-xs text-mauve mt-0.5">Consiéntete antes de terminar el día.</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Balance Visual del Día -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-lilacBorder shadow-xs">
+        <h3 class="text-base font-bold text-plum mb-1">Distribución detallada de tu tiempo</h3>
+        <p class="text-xs text-mauve mb-4">Equilibrio entre hogar, hijos, cocina y tu tiempo personal.</p>
+        <div id="day-balance-container" class="space-y-3">
+          <!-- Renderizado dinámicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- PESTAÑA 4: ALARMAS, PLANTILLAS Y AJUSTES   -->
+    <!-- ========================================== -->
+    <section id="view-settings" class="hidden space-y-5">
+      <!-- Plantillas Rápidas de Rutina -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-lilacBorder shadow-xs">
+        <h2 class="text-lg font-bold text-plum mb-1">Plantillas Rápidas de Horario</h2>
+        <p class="text-xs sm:text-sm text-mauve mb-4">Elige una estructura lista con alarmas incluidas y adáptala a tu día:</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button onclick="applyRoutineTemplate('balanced')" class="p-4 rounded-2xl border border-lilacBorder hover:border-lavender bg-lilacBg/70 text-left transition">
+            <span class="text-xl block mb-1">🌸</span>
+            <p class="font-bold text-sm text-plum">Día Equilibrado</p>
+            <p class="text-xs text-mauve mt-1">Hogar, comidas, hijos y 2 bloques protegidos de Mom Time.</p>
+          </button>
+
+          <button onclick="applyRoutineTemplate('working')" class="p-4 rounded-2xl border border-lilacBorder hover:border-lavender bg-lilacBg/70 text-left transition">
+            <span class="text-xl block mb-1">💼</span>
+            <p class="font-bold text-sm text-plum">Doble Jornada</p>
+            <p class="text-xs text-mauve mt-1">Bloques compactos para trabajo externo, hogar ágil y descanso.</p>
+          </button>
+
+          <button onclick="applyRoutineTemplate('light')" class="p-4 rounded-2xl border border-lilacBorder hover:border-lavender bg-lilacBg/70 text-left transition">
+            <span class="text-xl block mb-1">🌿</span>
+            <p class="font-bold text-sm text-plum">Día Ligero / Descanso</p>
+            <p class="text-xs text-mauve mt-1">Mínimas tareas domésticas y prioridad total en recargar energía.</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Configuración de Sonido de Alarma y Meta Personal -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 border border-lilacBorder shadow-xs space-y-5">
+        <h3 class="text-base font-bold text-plum">Preferencias de Alarma y Bienestar</h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1.5">¿Cómo te gustaría que te llame?</label>
+            <input
+              type="text"
+              id="input-mom-name"
+              value="Mamá"
+              onchange="updateMomName(this.value)"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1.5">Meta diaria de Mom Time (minutos)</label>
+            <select
+              id="select-mom-goal"
+              onchange="updateMomGoal(this.value)"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender"
+            >
+              <option value="30">30 minutos al día</option>
+              <option value="45" selected>45 minutos al día (Recomendado)</option>
+              <option value="60">60 minutos (1 hora para mí)</option>
+              <option value="90">90 minutos al día</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-mauve mb-2">Tono de alarma y recordatorio</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button onclick="selectAlarmTone('gentle-chime')" data-tone="gentle-chime" class="tone-btn flex items-center justify-between p-3.5 rounded-2xl border text-left transition">
+              <div>
+                <p class="font-semibold text-sm text-plum">🔔 Campanita Suave</p>
+                <p class="text-xs text-mauve">Acorde cálido que avisa sin sobresaltos</p>
+              </div>
+              <span class="text-xs font-bold text-lavenderDark">Probar</span>
+            </button>
+
+            <button onclick="selectAlarmTone('warm-sunrise')" data-tone="warm-sunrise" class="tone-btn flex items-center justify-between p-3.5 rounded-2xl border text-left transition">
+              <div>
+                <p class="font-semibold text-sm text-plum">🌅 Amanecer Dulce</p>
+                <p class="text-xs text-mauve">Notas ascendentes llenas de calma</p>
+              </div>
+              <span class="text-xs font-bold text-lavenderDark">Probar</span>
+            </button>
+
+            <button onclick="selectAlarmTone('zen-harp')" data-tone="zen-harp" class="tone-btn flex items-center justify-between p-3.5 rounded-2xl border text-left transition">
+              <div>
+                <p class="font-semibold text-sm text-plum">🌿 Arpa Zen (Mom Time)</p>
+                <p class="text-xs text-mauve">Ideal para tus pausas y descansos</p>
+              </div>
+              <span class="text-xs font-bold text-lavenderDark">Probar</span>
+            </button>
+
+            <button onclick="selectAlarmTone('happy-bell')" data-tone="happy-bell" class="tone-btn flex items-center justify-between p-3.5 rounded-2xl border text-left transition">
+              <div>
+                <p class="font-semibold text-sm text-plum">✨ Aviso Alegre</p>
+                <p class="text-xs text-mauve">Timbre claro para salidas y horarios</p>
+              </div>
+              <span class="text-xs font-bold text-lavenderDark">Probar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegación Inferior Móvil con Botón Flotante "+" Central (Idéntica al video 0:02) -->
+  <nav class="sm:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-lilacBorder px-2 py-1.5 shadow-lg shadow-lavender/10">
+    <div class="grid grid-cols-5 items-center">
+      <button onclick="switchTab('schedule')" data-nav-mobile="schedule" class="nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-semibold transition">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        <span>Inicio</span>
+      </button>
+
+      <button onclick="switchTab('tasks')" data-nav-mobile="tasks" class="nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-semibold transition">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <span>Familia</span>
+      </button>
+
+      <!-- Botón Central Flotante "+" Pastel Lavanda-Rosa -->
+      <div class="flex justify-center -mt-6">
+        <button
+          onclick="openActivityModal()"
+          class="w-14 h-14 rounded-full bg-gradient-to-tr from-blush to-lavender text-white shadow-md shadow-lavender/40 border-4 border-white flex items-center justify-center active:scale-95 transition"
+          aria-label="Nueva actividad con alarma"
+        >
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+
+      <button onclick="switchTab('assistant')" data-nav-mobile="assistant" class="nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-semibold transition">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+        <span>Mom Time</span>
+      </button>
+
+      <button onclick="switchTab('settings')" data-nav-mobile="settings" class="nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-semibold transition">
+        <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+        <span>Ajustes</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: CREAR / EDITAR ACTIVIDAD CON ALARMA              -->
+  <!-- ========================================================= -->
+  <div id="activity-modal" class="fixed inset-0 z-50 hidden bg-plum/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-xl border border-lilacBorder max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="modal-activity-title" class="text-lg font-bold text-plum">Nueva Actividad con Alarma</h3>
+        <button onclick="closeActivityModal()" class="p-2 rounded-full hover:bg-lilacSoft text-mauve">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <form onsubmit="saveActivity(event)" class="space-y-4">
+        <input type="hidden" id="act-id" />
+
+        <div>
+          <label class="block text-xs font-semibold text-mauve mb-1">¿Qué actividad vas a realizar?</label>
+          <input
+            type="text"
+            id="act-title"
+            required
+            placeholder="Ej. Tiempo para Mí (Yoga), Lactancia, Comida..."
+            class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1">Hora de inicio</label>
+            <input
+              type="time"
+              id="act-time"
+              required
+              class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-semibold focus:outline-none focus:border-lavender"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1">Duración estimada</label>
+            <select id="act-duration" class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender">
+              <option value="15">15 minutos</option>
+              <option value="20">20 minutos</option>
+              <option value="30" selected>30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="90">1 hora 30 min</option>
+              <option value="120">2 horas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1">Categoría</label>
+            <select id="act-category" class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender">
+              <option value="mom">💜 Mom Time (Para mí)</option>
+              <option value="hijos">🧡 Hijos y Cuidado</option>
+              <option value="hogar">🩵 Hogar y Paseo</option>
+              <option value="cocina">🩷 Cocina y Comidas</option>
+              <option value="trabajo">💙 Trabajo / Descanso</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1">Responsable / Apoyo</label>
+            <select id="act-assignee" class="w-full px-3.5 py-2.5 rounded-xl bg-lilacBg border border-lilacBorder text-sm font-medium focus:outline-none focus:border-lavender">
+              <option value="Mamá">👩 Mamá</option>
+              <option value="Pareja">🤝 Pareja (Apoyo)</option>
+              <option value="Hijos">👧👦 Hijos (Apoyo)</option>
+              <option value="Familia">🏡 En familia</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Configuración de Alarma y Recordatorio previo -->
+        <div class="p-4 rounded-2xl bg-lilacBg border border-lilacBorder space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⏰</span>
+              <div>
+                <p class="text-sm font-bold text-plum">Activar alarma sonora</p>
+                <p class="text-xs text-mauve">Te avisaremos con una melodía suave</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="act-alarm" checked class="sr-only peer" />
+              <div class="w-11 h-6 bg-lilacBorder peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-lavender"></div>
+            </label>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-mauve mb-1">Recordatorio anticipado</label>
+            <select id="act-reminder" class="w-full px-3 py-2 rounded-xl bg-white border border-lilacBorder text-xs font-semibold focus:outline-none focus:border-lavender">
+              <option value="0">Avisar exactamente a la hora</option>
+              <option value="5" selected>5 minutos antes + a la hora</option>
+              <option value="10">10 minutos antes + a la hora</option>
+              <option value="15">15 minutos antes + a la hora</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button type="button" onclick="closeActivityModal()" class="flex-1 py-3 rounded-full bg-lilacBg hover:bg-lilacBorder text-plum text-sm font-semibold transition">
+            Cancelar
+          </button>
+          <button type="submit" class="flex-1 py-3 rounded-full bg-gradient-to-r from-blush to-lavender hover:opacity-95 text-white text-sm font-bold shadow-xs transition">
+            Guardar en Mi Día
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: ALARMA ACTIVA EN VIVO (PANTALLA DE AVISO)        -->
+  <!-- ========================================================= -->
+  <div id="alarm-ring-modal" class="fixed inset-0 z-50 hidden bg-plum/65 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl border-2 border-lavender relative overflow-hidden">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blushSoft to-lavenderSoft text-lavenderDark mx-auto mb-4 flex items-center justify-center animate-bounce">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      </div>
+
+      <span id="ring-badge" class="inline-block px-3.5 py-1 rounded-full bg-lavenderSoft text-lavenderDark text-xs font-bold uppercase tracking-wider mb-2">
+        Es hora de tu actividad
+      </span>
+      <h3 id="ring-title" class="text-2xl font-extrabold text-plum mb-1">Título de actividad</h3>
+      <p id="ring-time" class="text-sm font-semibold text-mauve mb-3">12:00 PM • 30 min</p>
+      <p id="ring-tip" class="text-xs text-plum/80 bg-lilacBg p-3 rounded-2xl border border-lilacBorder mb-6">
+        Respira profundo. Un paso a la vez es suficiente.
+      </p>
+
+      <div class="space-y-2.5">
+        <button
+          onclick="acknowledgeAlarm(true)"
+          class="w-full py-3.5 rounded-full bg-mint hover:bg-mint/90 text-white font-bold text-sm shadow-xs transition active:scale-98"
+        >
+          ✓ Ya la inicié / Marcar lista
+        </button>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <button
+            onclick="snoozeActiveAlarm(5)"
+            class="py-3 rounded-full bg-lavenderSoft hover:bg-lavender/20 text-lavenderDark font-semibold text-xs sm:text-sm transition"
+          >
+            💤 Posponer 5 min
+          </button>
+          <button
+            onclick="acknowledgeAlarm(false)"
+            class="py-3 rounded-full bg-lilacBg hover:bg-lilacBorder text-mauve font-semibold text-xs sm:text-sm border border-lilacBorder transition"
+          >
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: MODO ANTI-ESTRÉS "LLEGÓ UN IMPREVISTO"            -->
+  <!-- ========================================================= -->
+  <div id="unexpected-modal" class="fixed inset-0 z-50 hidden bg-plum/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl border border-lilacBorder">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-3 py-1 rounded-full bg-peachSoft text-amber-900 text-xs font-bold">Modo Cero Culpa</span>
+        <button onclick="closeUnexpectedModal()" class="p-2 rounded-full hover:bg-lilacSoft text-mauve">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <h3 class="text-lg font-bold text-plum mb-1">¿Surgió un imprevisto en casa?</h3>
+      <p class="text-xs sm:text-sm text-mauve mb-4 leading-relaxed">
+        No te frustres ni te estreses. Tu asistente recorrerá automáticamente tus actividades pendientes y sus alarmas para darte aire.
+      </p>
+
+      <div class="space-y-2.5">
+        <button onclick="applyUnexpectedShift(30)" class="w-full p-3.5 rounded-2xl bg-lilacBg hover:bg-peachSoft/60 border border-lilacBorder text-left flex items-center justify-between transition">
+          <div>
+            <p class="font-bold text-sm text-plum">Recorrer todo +30 minutos</p>
+            <p class="text-xs text-mauve">Ideal para una llamada, tráfico o pequeño contratiempo.</p>
+          </div>
+          <span class="text-peach font-bold text-sm">+30m →</span>
+        </button>
+
+        <button onclick="applyUnexpectedShift(60)" class="w-full p-3.5 rounded-2xl bg-lilacBg hover:bg-peachSoft/60 border border-lilacBorder text-left flex items-center justify-between transition">
+          <div>
+            <p class="font-bold text-sm text-plum">Recorrer todo +1 hora</p>
+            <p class="text-xs text-mauve">Para emergencias domésticas o visitas inesperadas.</p>
+          </div>
+          <span class="text-peach font-bold text-sm">+1h →</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 4: INSTALACIÓN PWA EN EL CELULAR                    -->
+  <!-- ========================================================= -->
+  <div id="pwa-modal" class="fixed inset-0 z-50 hidden bg-plum/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl border border-lilacBorder">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-3 py-1 rounded-full bg-lavenderSoft text-lavenderDark text-xs font-bold">App PWA Instalable</span>
+        <button onclick="closePwaModal()" class="p-2 rounded-full hover:bg-lilacSoft text-mauve">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <h3 class="text-lg font-bold text-plum mb-1">Lleva MT (Mom Time) en tu pantalla</h3>
+      <p class="text-xs sm:text-sm text-mauve mb-4">Úsala como una app nativa en tu teléfono para tener tus horarios y alarmas siempre a la mano:</p>
+
+      <div id="pwa-native-install-box" class="hidden mb-4">
+        <button onclick="triggerNativePwaInstall()" class="w-full py-3 rounded-full bg-gradient-to-r from-blush to-lavender text-white font-bold text-sm shadow-xs transition">
+          Instalar MT en este dispositivo ahora
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-plum bg-lilacBg p-4 rounded-2xl border border-lilacBorder">
+        <div>
+          <p class="font-bold text-plum mb-0.5">📱 En iPhone / iPad (Safari):</p>
+          <p class="text-mauve">Toca el ícono <strong>Compartir</strong> (cuadro con flecha hacia arriba) y elige <strong>"Agregar a inicio"</strong>.</p>
+        </div>
+        <div class="border-t border-lilacBorder pt-2.5">
+          <p class="font-bold text-plum mb-0.5">🤖 En Android (Chrome):</p>
+          <p class="text-mauve">Toca los <strong>3 puntos</strong> arriba a la derecha y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificación Toast Flotante (Sin alert()) -->
+  <div id="toast-container" class="fixed bottom-24 sm:bottom-6 inset-x-4 sm:inset-x-auto sm:right-6 z-50 pointer-events-none flex flex-col items-center sm:items-end gap-2"></div>
+
+  <script>
+    // =========================================================================
+    // 1. CONFIGURACIÓN PWA DINÁMICA (Manifest + Service Worker seguro)
+    // =========================================================================
+    let deferredInstallPrompt = null;
+
+    function initPwaCapabilities() {
+      try {
+        const manifestData = {
+          name: "MT — Mom Time | Asistente para Mamá",
+          short_name: "MT Mom Time",
+          description: "Horario inteligente con alarmas, recordatorios y autocuidado para mamás amas de casa.",
+          start_url: ".",
+          display: "standalone",
+          background_color: "#F8F6FC",
+          theme_color: "#9B7EDE",
+          orientation: "portrait",
+          icons: [
+            {
+              src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='48' fill='%239B7EDE'/%3E%3Ccircle cx='96' cy='96' r='56' fill='none' stroke='%23FFFFFF' stroke-width='10'/%3E%3Cpath d='M96 62v34l22 16' fill='none' stroke='%23FFFFFF' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+              sizes: "192x192",
+              type: "image/svg+xml"
+            }
+          ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'manifest';
+        linkEl.href = manifestURL;
+        document.head.appendChild(linkEl);
+      } catch (err) {
+        // Fallback silencioso en entornos restringidos
+      }
+
+      // Capturar evento nativo de instalación PWA cuando el navegador lo ofrezca
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        const box = document.getElementById('pwa-native-install-box');
+        if (box) box.classList.remove('hidden');
+      });
+
+      // Registro opcional de Service Worker para caché offline si el entorno lo permite
+      if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+        try {
+          const swCode = `
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+            self.addEventListener('fetch', (e) => {});
+          `;
+          const swBlob = new Blob([swCode], { type: 'application/javascript' });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        } catch (e) {}
+      }
+    }
+
+    // =========================================================================
+    // 2. MOTOR DE AUDIO CON TONE.JS (ALARMAS Y RECORDATORIOS SUAVES)
+    // =========================================================================
+    const SoundEngine = {
+      isUnlocked: false,
+      ringInterval: null,
+
+      async unlock() {
+        try {
+          if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+            await Tone.start();
+          }
+          this.isUnlocked = true;
+          const banner = document.getElementById('audio-banner');
+          if (banner) banner.classList.add('hidden');
+        } catch (err) {
+          console.warn('Audio en espera de interacción:', err);
+        }
+      },
+
+      playTone(toneType = state.selectedTone) {
+        try {
+          if (typeof Tone === 'undefined') return;
+          if (Tone.context.state !== 'running') {
+            Tone.start().catch(() => {});
+          }
+
+          const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.04, decay: 0.35, sustain: 0.2, release: 1.2 }
+          }).toDestination();
+          synth.volume.value = -6;
+
+          const now = Tone.now();
+          if (toneType === 'warm-sunrise') {
+            synth.triggerAttackRelease('F4', '8n', now);
+            synth.triggerAttackRelease('C5', '8n', now + 0.18);
+            synth.triggerAttackRelease('G5', '8n', now + 0.36);
+            synth.triggerAttackRelease('A5', '4n', now + 0.54);
+          } else if (toneType === 'zen-harp') {
+            synth.triggerAttackRelease('D5', '16n', now);
+            synth.triggerAttackRelease('F#5', '16n', now + 0.14);
+            synth.triggerAttackRelease('A5', '16n', now + 0.28);
+            synth.triggerAttackRelease('B5', '16n', now + 0.42);
+            synth.triggerAttackRelease('D6', '4n', now + 0.56);
+          } else if (toneType === 'happy-bell') {
+            synth.triggerAttackRelease('G5', '8n', now);
+            synth.triggerAttackRelease('E5', '8n', now + 0.2);
+            synth.triggerAttackRelease('C6', '4n', now + 0.42);
+          } else {
+            // gentle-chime por defecto
+            synth.triggerAttackRelease('C5', '8n', now);
+            synth.triggerAttackRelease('E5', '8n', now + 0.16);
+            synth.triggerAttackRelease('G5', '8n', now + 0.32);
+            synth.triggerAttackRelease('B5', '4n', now + 0.48);
+          }
+        } catch (err) {
+          console.warn('No se pudo reproducir el tono:', err);
+        }
+      },
+
+      startRingingLoop(toneType) {
+        this.stopRingingLoop();
+        this.playTone(toneType);
+        this.ringInterval = setInterval(() => {
+          this.playTone(toneType);
+        }, 4200);
+      },
+
+      stopRingingLoop() {
+        if (this.ringInterval) {
+          clearInterval(this.ringInterval);
+          this.ringInterval = null;
+        }
+      }
+    };
+
+    // =========================================================================
+    // 3. ESTADO EN MEMORIA Y CATEGORÍAS PASTEL DEL VIDEO
+    // =========================================================================
+    const CATEGORY_META = {
+      mom: {
+        label: 'Mom Time',
+        emoji: '🧘‍♀️',
+        bg: 'bg-lavenderSoft',
+        border: 'border-lavender/30',
+        text: 'text-lavenderDark',
+        badge: 'bg-lavender text-white',
+        hex: '#9B7EDE',
+        tip: 'Este bloque es exclusivamente para ti. Disfrútalo sin culpa.'
+      },
+      hijos: {
+        label: 'Hijos',
+        emoji: '🧡',
+        bg: 'bg-peachSoft',
+        border: 'border-peach/30',
+        text: 'text-amber-800',
+        badge: 'bg-peach text-white',
+        hex: '#F5A36C',
+        tip: 'Un momento presente vale más que mil tareas pendientes.'
+      },
+      hogar: {
+        label: 'Hogar',
+        emoji: '🌿',
+        bg: 'bg-mintSoft',
+        border: 'border-mint/30',
+        text: 'text-teal-800',
+        badge: 'bg-mint text-white',
+        hex: '#58C4B8',
+        tip: 'No necesitas hacer todo perfecto hoy; avanza por bloques cortos.'
+      },
+      cocina: {
+        label: 'Cocina',
+        emoji: '🍓',
+        bg: 'bg-blushSoft',
+        border: 'border-blush/30',
+        text: 'text-rose-800',
+        badge: 'bg-blush text-white',
+        hex: '#F28B9C',
+        tip: 'Simplifica el menú si hoy tuviste mucha carga.'
+      },
+      trabajo: {
+        label: 'Descanso / Trabajo',
+        emoji: '🌙',
+        bg: 'bg-periwinkleSoft',
+        border: 'border-periwinkle/30',
+        text: 'text-indigo-800',
+        badge: 'bg-periwinkle text-white',
+        hex: '#7986CB',
+        tip: 'Al terminar este bloque, desconecta para recuperar tu energía.'
+      }
+    };
+
+    function formatMinutesToHHMM(totalMins) {
+      const clamped = ((totalMins % 1440) + 1440) % 1440;
+      const h = Math.floor(clamped / 60);
+      const m = clamped % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
+    function parseHHMMToMinutes(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    }
+
+    function buildInitialSchedule() {
+      const now = new Date();
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+
+      return [
+        {
+          id: 'act-1',
+          title: 'Desayuno y Cuidado Matutino',
+          time: formatMinutesToHHMM(Math.max(480, nowMins - 140)),
+          duration: 45,
+          category: 'hijos',
+          alarmEnabled: true,
+          reminderOffset: 5,
+          completed: true,
+          assignee: 'Mamá',
+          triggeredToday: true,
+          preTriggeredToday: true
+        },
+        {
+          id: 'act-2',
+          title: 'Tiempo para Mí (Yoga y Respiración)',
+          time: formatMinutesToHHMM(nowMins + 2),
+          duration: 25,
+          category: 'mom',
+          alarmEnabled: true,
+          reminderOffset: 5,
+          completed: false,
+          assignee: 'Mamá',
+          triggeredToday: false,
+          preTriggeredToday: false
+        },
+        {
+          id: 'act-3',
+          title: 'Paseo al Aire Libre y Orden Ligero',
+          time: formatMinutesToHHMM(nowMins + 55),
+          duration: 40,
+          category: 'hogar',
+          alarmEnabled: true,
+          reminderOffset: 5,
+          completed: false,
+          assignee: 'Hijos',
+          triggeredToday: false,
+          preTriggeredToday: false
+        },
+        {
+          id: 'act-4',
+          title: 'Preparar Comida Nutritiva',
+          time: formatMinutesToHHMM(nowMins + 120),
+          duration: 50,
+          category: 'cocina',
+          alarmEnabled: true,
+          reminderOffset: 10,
+          completed: false,
+          assignee: 'Mamá',
+          triggeredToday: false,
+          preTriggeredToday: false
+        },
+        {
+          id: 'act-5',
+          title: 'Descanso Nocturno y Desconexión',
+          time: formatMinutesToHHMM(nowMins + 210),
+          duration: 30,
+          category: 'trabajo',
+          alarmEnabled: true,
+          reminderOffset: 5,
+          completed: false,
+          assignee: 'Pareja',
+          triggeredToday: false,
+          preTriggeredToday: false
+        }
+      ];
+    }
+
+    const state = {
+      currentTab: 'schedule',
+      momName: 'Mamá',
+      momTimeGoalMinutes: 45,
+      selectedTone: 'gentle-chime',
+      filterCategory: 'all',
+      waterGlasses: 4,
+      waterGoal: 8,
+      activities: buildInitialSchedule(),
+      quickTasks: [
+        { id: 'qt-1', title: 'Sacar basura y reciclar botellas', category: 'hogar', assignee: 'Pareja', completed: false },
+        { id: 'qt-2', title: 'Recoger juguetes de la sala antes de cenar', category: 'hijos', assignee: 'Hijos', completed: false },
+        { id: 'qt-3', title: 'Agendar cita médica / revisión personal', category: 'mom', assignee: 'Mamá', completed: false }
+      ],
+      activeAlarm: null,
+      snoozedQueue: []
+    };
+
+    // =========================================================================
+    // 4. RELOJ EN VIVO Y VERIFICADOR DE ALARMAS / RECORDATORIOS
+    // =========================================================================
+    function startClockAndAlarmEngine() {
+      function tick() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const currentHHMM = `${hh}:${mm}`;
+        const currentTotalMins = now.getHours() * 60 + now.getMinutes();
+
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.textContent = currentHHMM;
+
+        // Saludo contextual según hora del día
+        const greetingEl = document.getElementById('header-greeting');
+        if (greetingEl) {
+          const hour = now.getHours();
+          const salutation = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+          greetingEl.textContent = `${salutation}, ${state.momName} • Tu asistente sin estrés`;
+        }
+
+        // Revisar alarmas pospuestas (snooze)
+        const nowMs = Date.now();
+        for (let i = state.snoozedQueue.length - 1; i >= 0; i--) {
+          const item = state.snoozedQueue[i];
+          if (nowMs >= item.targetEpochMs && !state.activeAlarm) {
+            state.snoozedQueue.splice(i, 1);
+            const act = state.activities.find(a => a.id === item.activityId);
+            if (act && !act.completed) {
+              fireAlarmModal(act, false, 0);
+            }
+          }
+        }
+
+        // Revisar alarmas programadas y recordatorios previos
+        if (!state.activeAlarm) {
+          for (const act of state.activities) {
+            if (!act.alarmEnabled || act.completed) continue;
+            const actMins = parseHHMMToMinutes(act.time);
+            const diff = actMins - currentTotalMins;
+
+            // Alarma exacta
+            if (diff === 0 && !act.triggeredToday) {
+              act.triggeredToday = true;
+              fireAlarmModal(act, false, 0);
+              break;
+            }
+
+            // Recordatorio anticipado (5, 10 o 15 min antes)
+            if (act.reminderOffset > 0 && diff === act.reminderOffset && !act.preTriggeredToday) {
+              act.preTriggeredToday = true;
+              fireAlarmModal(act, true, act.reminderOffset);
+              break;
+            }
+          }
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function fireAlarmModal(activity, isPreReminder = false, minutesBefore = 0) {
+      state.activeAlarm = { activity, isPreReminder, minutesBefore };
+      const meta = CATEGORY_META[activity.category] || CATEGORY_META.hogar;
+
+      document.getElementById('ring-badge').textContent = isPreReminder
+        ? `Recordatorio: empieza en ${minutesBefore} min`
+        : `${meta.emoji} ¡Es hora de tu actividad!`;
+      document.getElementById('ring-title').textContent = activity.title;
+      document.getElementById('ring-time').textContent = `${activity.time} hrs • Duración: ${activity.duration} min`;
+      document.getElementById('ring-tip').textContent = meta.tip;
+
+      const modal = document.getElementById('alarm-ring-modal');
+      modal.classList.remove('hidden');
+
+      const toneToPlay = activity.category === 'mom' ? 'zen-harp' : state.selectedTone;
+      SoundEngine.startRingingLoop(toneToPlay);
+    }
+
+    function triggerDemoAlarm() {
+      SoundEngine.unlock();
+      const candidate = state.activities.find(a => !a.completed) || state.activities[0];
+      if (candidate) {
+        fireAlarmModal(candidate, false, 0);
+      }
+    }
+
+    function acknowledgeAlarm(markCompleted) {
+      SoundEngine.stopRingingLoop();
+      if (state.activeAlarm && markCompleted) {
+        const act = state.activities.find(a => a.id === state.activeAlarm.activity.id);
+        if (act) {
+          act.completed = true;
+          showToast(`¡Excelente, ${state.momName}! Actividad completada.`);
+        }
+      }
+      state.activeAlarm = null;
+      document.getElementById('alarm-ring-modal').classList.add('hidden');
+      renderAll();
+    }
+
+    function snoozeActiveAlarm(minutes) {
+      SoundEngine.stopRingingLoop();
+      if (state.activeAlarm) {
+        state.snoozedQueue.push({
+          activityId: state.activeAlarm.activity.id,
+          targetEpochMs: Date.now() + minutes * 60 * 1000
+        });
+        showToast(`Alarma pospuesta ${minutes} minutos. Tómate tu tiempo.`);
+      }
+      state.activeAlarm = null;
+      document.getElementById('alarm-ring-modal').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 5. NAVEGACIÓN Y RENDERIZADO DE INTERFAZ (ESTILO VIDEO)
+    // =========================================================================
+    function switchTab(tabId) {
+      state.currentTab = tabId;
+      ['schedule', 'tasks', 'assistant', 'settings'].forEach(id => {
+        const section = document.getElementById(`view-${id}`);
+        if (section) section.classList.toggle('hidden', id !== tabId);
+      });
+
+      document.querySelectorAll('.nav-tab-desktop').forEach(btn => {
+        const active = btn.dataset.nav === tabId;
+        btn.className = active
+          ? 'nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-lavenderSoft text-lavenderDark transition'
+          : 'nav-tab-desktop flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-mauve hover:text-plum hover:bg-lilacBg transition';
+      });
+
+      document.querySelectorAll('.nav-tab-mobile').forEach(btn => {
+        const active = btn.dataset.navMobile === tabId;
+        btn.className = active
+          ? 'nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-bold text-lavenderDark transition'
+          : 'nav-tab-mobile flex flex-col items-center justify-center py-1.5 rounded-2xl text-[11px] font-medium text-mauve transition';
+      });
+
+      renderAll();
+    }
+
+    function setCategoryFilter(cat) {
+      state.filterCategory = cat;
+      renderSchedule();
+    }
+
+    function renderAll() {
+      renderNextAlarmSpotlight();
+      renderMomTimeProgress();
+      renderSchedule();
+      renderHydrationAndDonutWidgets();
+      renderQuickTasks();
+      renderDayBalance();
+      renderToneSelection();
+    }
+
+    function renderNextAlarmSpotlight() {
+      const container = document.getElementById('next-alarm-card');
+      if (!container) return;
+
+      const sorted = [...state.activities].sort((a, b) => parseHHMMToMinutes(a.time) - parseHHMMToMinutes(b.time));
+      const next = sorted.find(a => !a.completed && a.alarmEnabled) || sorted.find(a => !a.completed);
+
+      if (!next) {
+        container.innerHTML = `
+          <div class="py-2">
+            <p class="text-base font-bold text-plum">¡Todo al día por hoy, ${state.momName}! 🌸</p>
+            <p class="text-xs text-mauve mt-1">Disfruta tu descanso merecido o agrega un bloque de Mom Time.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const meta = CATEGORY_META[next.category] || CATEGORY_META.hogar;
+      container.innerHTML = `
+        <div class="flex items-center justify-between gap-3 mt-1">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xl font-extrabold text-plum tabular-nums">${next.time}</span>
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full ${meta.bg} ${meta.text} border ${meta.border}">
+                ${meta.emoji} ${meta.label}
+              </span>
+              ${next.alarmEnabled
+                ? `<span class="text-xs font-semibold text-lavenderDark flex items-center gap-1">⏰ Alarma activa</span>`
+                : `<span class="text-xs text-mauve">Sin alarma</span>`}
+            </div>
+            <p class="text-base sm:text-lg font-bold text-plum mt-1">${escapeHtml(next.title)}</p>
+            <p class="text-xs text-mauve mt-0.5">Duración: ${next.duration} min • Responsable: ${escapeHtml(next.assignee)}</p>
+          </div>
+          <button
+            onclick="toggleActivityComplete('${next.id}')"
+            class="shrink-0 px-3.5 py-2.5 rounded-full bg-lilacBg hover:bg-mintSoft text-plum hover:text-teal-800 border border-lilacBorder text-xs font-bold transition active:scale-95"
+          >
+            ✓ Listo
+          </button>
+        </div>
+      `;
+    }
+
+    function renderMomTimeProgress() {
+      const momMins = state.activities
+        .filter(a => a.category === 'mom')
+        .reduce((acc, a) => acc + Number(a.duration || 0), 0);
+
+      const goal = state.momTimeGoalMinutes;
+      const pct = Math.min(100, Math.round((momMins / goal) * 100));
+
+      const badge = document.getElementById('mom-time-badge');
+      const bar = document.getElementById('mom-time-bar');
+      const enc = document.getElementById('mom-time-encouragement');
+
+      if (badge) badge.textContent = `${momMins} / ${goal} min`;
+      if (bar) bar.style.width = `${pct}%`;
+      if (enc) {
+        if (momMins === 0) {
+          enc.textContent = 'Aún no tienes espacio para ti hoy.';
+        } else if (momMins < goal) {
+          enc.textContent = `¡Vas muy bien! Faltan ${goal - momMins} min.`;
+        } else {
+          enc.textContent = '¡Meta de bienestar asegurada! 💜';
+        }
+      }
+    }
+
+    function renderSchedule() {
+      document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+        const isSelected = btn.dataset.cat === state.filterCategory;
+        btn.className = isSelected
+          ? 'cat-filter-btn px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap bg-lavender text-white shadow-xs transition'
+          : 'cat-filter-btn px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap bg-white text-mauve hover:text-plum border border-lilacBorder transition';
+      });
+
+      const container = document.getElementById('schedule-list');
+      if (!container) return;
+
+      const sorted = [...state.activities]
+        .filter(a => state.filterCategory === 'all' || a.category === state.filterCategory)
+        .sort((a, b) => parseHHMMToMinutes(a.time) - parseHHMMToMinutes(b.time));
+
+      if (sorted.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 text-center border border-lilacBorder">
+            <p class="text-base font-bold text-plum mb-1">No hay actividades en esta categoría</p>
+            <p class="text-xs text-mauve mb-4">Agrega una actividad con alarma o cambia el filtro superior.</p>
+            <button onclick="openActivityModal()" class="px-4 py-2 rounded-full bg-gradient-to-r from-blush to-lavender text-white text-xs font-bold">
+              + Agregar actividad
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = sorted.map(act => {
+        const meta = CATEGORY_META[act.category] || CATEGORY_META.hogar;
+        const isDelegated = act.assignee !== 'Mamá';
+
+        return `
+          <div class="bg-white rounded-3xl p-4 sm:p-5 border ${act.completed ? 'border-lilacBorder opacity-70' : meta.border} shadow-xs transition flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5 min-w-0">
+              <!-- Ícono circular pastel a la izquierda (igual que las tarjetas de "Mi Día" en el video) -->
+              <button
+                onclick="toggleActivityComplete('${act.id}')"
+                class="w-12 h-12 rounded-full ${act.completed ? 'bg-mint text-white' : `${meta.bg} ${meta.text}`} flex items-center justify-center text-xl shrink-0 transition active:scale-95 relative"
+                title="Marcar actividad como completada"
+              >
+                ${act.completed
+                  ? '<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>'
+                  : `<span>${meta.emoji}</span>`}
+              </button>
+
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold text-mauve tabular-nums">${act.time}</span>
+                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.text}">
+                    ${meta.label}
+                  </span>
+                  ${isDelegated ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-skySoft text-sky-700">🤝 ${escapeHtml(act.assignee)}</span>` : ''}
+                </div>
+
+                <h4 class="text-sm sm:text-base font-bold text-plum mt-0.5 truncate ${act.completed ? 'line-through text-mauve' : ''}">
+                  ${escapeHtml(act.title)}
+                </h4>
+
+                <p class="text-xs ${act.alarmEnabled ? 'text-lavenderDark font-medium' : 'text-mauve'} mt-0.5">
+                  ${act.alarmEnabled ? `⏰ Alarma (${act.reminderOffset > 0 ? `${act.reminderOffset}m antes` : 'exacta'})` : '🔕 Silenciada'} • ${act.duration} min
+                </p>
+              </div>
+            </div>
+
+            <!-- Controles Rápidos -->
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                onclick="toggleActivityAlarm('${act.id}')"
+                class="p-2 rounded-full transition ${act.alarmEnabled ? 'bg-lavenderSoft text-lavenderDark' : 'bg-lilacBg text-mauve'}"
+                title="Activar o silenciar alarma"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+
+              <button
+                onclick="openActivityModal('${act.id}')"
+                class="p-2 rounded-full hover:bg-lilacSoft text-mauve hover:text-plum transition"
+                title="Editar actividad"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+
+              <button
+                onclick="deleteActivity('${act.id}')"
+                class="p-2 rounded-full hover:bg-blushSoft text-mauve hover:text-blush transition"
+                title="Eliminar actividad"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Widgets visuales inferiores de "Mi Día" (Hidratación + Donut Pastel como en el video)
+    function renderHydrationAndDonutWidgets() {
+      const hydEl = document.getElementById('hydration-widget');
+      const donutEl = document.getElementById('donut-widget');
+
+      if (hydEl) {
+        const pct = Math.min(100, Math.round((state.waterGlasses / state.waterGoal) * 100));
+        const radius = 32;
+        const circumference = 2 * Math.PI * radius;
+        const dashOffset = circumference - (pct / 100) * circumference;
+
+        hydEl.innerHTML = `
+          <div class="w-full flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-plum">Hidratación</span>
+            <span class="text-[11px] font-semibold text-sky-600">${state.waterGlasses}/${state.waterGoal} vasos</span>
+          </div>
+          <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+            <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="${radius}" stroke="#EBF5FD" stroke-width="7" fill="none" />
+              <circle cx="40" cy="40" r="${radius}" stroke="#6BB5EB" stroke-width="7" fill="none"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="round" />
+            </svg>
+            <span class="absolute text-2xl">💧</span>
+          </div>
+          <button
+            onclick="addWaterGlass()"
+            class="mt-1 px-3 py-1 rounded-full bg-skySoft hover:bg-skyPastel/25 text-sky-700 text-xs font-bold transition active:scale-95"
+          >
+            + 1 vaso de agua
+          </button>
+        `;
+      }
+
+      if (donutEl) {
+        const totals = { mom: 0, hijos: 0, hogar: 0, cocina: 0, trabajo: 0 };
+        let sum = 0;
+        state.activities.forEach(a => {
+          const d = Number(a.duration || 0);
+          if (totals[a.category] !== undefined) totals[a.category] += d;
+          sum += d;
+        });
+
+        const radius = 30;
+        const circumference = 2 * Math.PI * radius;
+        let accumulated = 0;
+
+        const segments = sum > 0
+          ? Object.entries(CATEGORY_META).map(([key, meta]) => {
+              const val = totals[key] || 0;
+              if (val <= 0) return '';
+              const segLen = (val / sum) * circumference;
+              const offset = -accumulated;
+              accumulated += segLen;
+              return `<circle cx="40" cy="40" r="${radius}" stroke="${meta.hex}" stroke-width="9" fill="none"
+                stroke-dasharray="${segLen} ${circumference}" stroke-dashoffset="${offset}" />`;
+            }).join('')
+          : `<circle cx="40" cy="40" r="${radius}" stroke="#ECE7F6" stroke-width="9" fill="none" />`;
+
+        const momPct = sum > 0 ? Math.round((totals.mom / sum) * 100) : 0;
+
+        donutEl.innerHTML = `
+          <div class="w-full flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-plum">Mi Balance</span>
+            <span class="text-[11px] font-semibold text-lavenderDark">${momPct}% para ti</span>
+          </div>
+          <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+            <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+              ${segments}
+            </svg>
+            <span class="absolute text-xs font-extrabold text-plum">${sum}m</span>
+          </div>
+          <button
+            onclick="switchTab('assistant')"
+            class="mt-1 px-3 py-1 rounded-full bg-lavenderSoft hover:bg-lavender/20 text-lavenderDark text-xs font-bold transition"
+          >
+            Ver resumen
+          </button>
+        `;
+      }
+    }
+
+    function addWaterGlass() {
+      state.waterGlasses = state.waterGlasses >= state.waterGoal ? 1 : state.waterGlasses + 1;
+      renderHydrationAndDonutWidgets();
+      if (state.waterGlasses === state.waterGoal) {
+        showToast('💧 ¡Meta de hidratación cumplida hoy!');
+      }
+    }
+
+    function renderQuickTasks() {
+      const container = document.getElementById('quick-tasks-list');
+      if (!container) return;
+
+      if (state.quickTasks.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-8 text-center border border-lilacBorder">
+            <p class="text-sm font-bold text-plum">Tu lista de pendientes rápidos está limpia ✨</p>
+            <p class="text-xs text-mauve mt-1">Usa el cuadro superior para anotar cualquier idea o tarea familiar.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = state.quickTasks.map(task => {
+        const meta = CATEGORY_META[task.category] || CATEGORY_META.hogar;
+        const isFamily = task.assignee !== 'Mamá';
+        return `
+          <div class="bg-white rounded-2xl p-4 border border-lilacBorder shadow-2xs flex items-center justify-between gap-3 ${task.completed ? 'opacity-60' : ''}">
+            <div class="flex items-center gap-3 min-w-0">
+              <button
+                onclick="toggleQuickTask('${task.id}')"
+                class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition ${task.completed ? 'bg-mint border-mint text-white' : 'border-lavender/40 hover:border-mint'}"
+              >
+                ${task.completed ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
+              </button>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-plum truncate ${task.completed ? 'line-through text-mauve' : ''}">${escapeHtml(task.title)}</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-xs ${meta.text} font-semibold">${meta.emoji} ${meta.label}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full ${isFamily ? 'bg-lavenderSoft text-lavenderDark font-semibold' : 'bg-lilacBg text-mauve'}">
+                    ${isFamily ? `🤝 ${escapeHtml(task.assignee)}` : '👩 Mamá'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button
+                onclick="promoteTaskToSchedule('${task.id}')"
+                class="px-3 py-1.5 rounded-full bg-lilacBg hover:bg-lavenderSoft text-plum hover:text-lavenderDark border border-lilacBorder text-xs font-semibold transition"
+                title="Pasar al horario con alarma"
+              >
+                ⏰ Agendar
+              </button>
+              <button
+                onclick="deleteQuickTask('${task.id}')"
+                class="p-2 rounded-full hover:bg-blushSoft text-mauve hover:text-blush transition"
+                title="Eliminar"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDayBalance() {
+      const container = document.getElementById('day-balance-container');
+      if (!container) return;
+
+      const totals = { mom: 0, hijos: 0, hogar: 0, cocina: 0, trabajo: 0 };
+      let grandTotal = 0;
+
+      state.activities.forEach(a => {
+        const d = Number(a.duration || 0);
+        if (totals[a.category] !== undefined) totals[a.category] += d;
+        grandTotal += d;
+      });
+
+      if (grandTotal === 0) grandTotal = 1;
+
+      container.innerHTML = Object.entries(CATEGORY_META).map(([key, meta]) => {
+        const mins = totals[key] || 0;
+        const pct = Math.round((mins / grandTotal) * 100);
+        return `
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold mb-1">
+              <span class="text-plum">${meta.emoji} ${meta.label}</span>
+              <span class="text-mauve">${mins} min (${pct}%)</span>
+            </div>
+            <div class="w-full h-2.5 bg-lilacBg rounded-full overflow-hidden">
+              <div class="h-full ${meta.badge} rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderToneSelection() {
+      document.querySelectorAll('.tone-btn').forEach(btn => {
+        const active = btn.dataset.tone === state.selectedTone;
+        btn.className = active
+          ? 'tone-btn flex items-center justify-between p-3.5 rounded-2xl border-2 border-lavender bg-lavenderSoft/60 text-left transition'
+          : 'tone-btn flex items-center justify-between p-3.5 rounded-2xl border border-lilacBorder bg-lilacBg/60 hover:bg-lilacBg text-left transition';
+      });
+    }
+
+    // =========================================================================
+    // 6. ACCIONES DE USUARIO Y ASISTENTE INTELIGENTE MT
+    // =========================================================================
+    function openActivityModal(editId = null) {
+      SoundEngine.unlock();
+      const modal = document.getElementById('activity-modal');
+      const titleEl = document.getElementById('modal-activity-title');
+
+      if (editId) {
+        const act = state.activities.find(a => a.id === editId);
+        if (!act) return;
+        titleEl.textContent = 'Editar Actividad y Alarma';
+        document.getElementById('act-id').value = act.id;
+        document.getElementById('act-title').value = act.title;
+        document.getElementById('act-time').value = act.time;
+        document.getElementById('act-duration').value = String(act.duration);
+        document.getElementById('act-category').value = act.category;
+        document.getElementById('act-assignee').value = act.assignee;
+        document.getElementById('act-alarm').checked = act.alarmEnabled;
+        document.getElementById('act-reminder').value = String(act.reminderOffset);
+      } else {
+        titleEl.textContent = 'Nueva Actividad con Alarma';
+        document.getElementById('act-id').value = '';
+        document.getElementById('act-title').value = '';
+        const now = new Date();
+        const nextHour = formatMinutesToHHMM(now.getHours() * 60 + now.getMinutes() + 30);
+        document.getElementById('act-time').value = nextHour;
+        document.getElementById('act-duration').value = '30';
+        document.getElementById('act-category').value = 'mom';
+        document.getElementById('act-assignee').value = 'Mamá';
+        document.getElementById('act-alarm').checked = true;
+        document.getElementById('act-reminder').value = '5';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeActivityModal() {
+      document.getElementById('activity-modal').classList.add('hidden');
+    }
+
+    function saveActivity(event) {
+      event.preventDefault();
+      SoundEngine.unlock();
+
+      const id = document.getElementById('act-id').value;
+      const payload = {
+        title: document.getElementById('act-title').value.trim(),
+        time: document.getElementById('act-time').value,
+        duration: Number(document.getElementById('act-duration').value),
+        category: document.getElementById('act-category').value,
+        assignee: document.getElementById('act-assignee').value,
+        alarmEnabled: document.getElementById('act-alarm').checked,
+        reminderOffset: Number(document.getElementById('act-reminder').value),
+        triggeredToday: false,
+        preTriggeredToday: false
+      };
+
+      if (id) {
+        const idx = state.activities.findIndex(a => a.id === id);
+        if (idx !== -1) {
+          state.activities[idx] = { ...state.activities[idx], ...payload };
+          showToast('Actividad y alarma actualizadas.');
+        }
+      } else {
+        state.activities.push({
+          id: 'act-' + Date.now(),
+          completed: false,
+          ...payload
+        });
+        showToast(`Actividad agregada a las ${payload.time} con alarma.`);
+      }
+
+      closeActivityModal();
+      switchTab('schedule');
+    }
+
+    function toggleActivityComplete(id) {
+      const act = state.activities.find(a => a.id === id);
+      if (!act) return;
+      act.completed = !act.completed;
+      if (act.completed) {
+        showToast('¡Muy bien! Un pendiente menos en tu día.');
+      }
+      renderAll();
+    }
+
+    function toggleActivityAlarm(id) {
+      SoundEngine.unlock();
+      const act = state.activities.find(a => a.id === id);
+      if (!act) return;
+      act.alarmEnabled = !act.alarmEnabled;
+      act.triggeredToday = false;
+      act.preTriggeredToday = false;
+      showToast(act.alarmEnabled ? `⏰ Alarma activada para las ${act.time}` : '🔕 Alarma silenciada');
+      renderAll();
+    }
+
+    function deleteActivity(id) {
+      state.activities = state.activities.filter(a => a.id !== id);
+      showToast('Actividad eliminada del horario.');
+      renderAll();
+    }
+
+    // Rescatar automáticamente un bloque Mom Time en el siguiente espacio libre
+    function quickRescueMomTime(durationMins, title) {
+      SoundEngine.unlock();
+      const now = new Date();
+      let candidateStart = now.getHours() * 60 + now.getMinutes() + 15;
+
+      const sorted = [...state.activities].sort((a, b) => parseHHMMToMinutes(a.time) - parseHHMMToMinutes(b.time));
+
+      // Buscar un hueco donde no se empalme con otra actividad
+      for (const act of sorted) {
+        const start = parseHHMMToMinutes(act.time);
+        const end = start + Number(act.duration || 30);
+        if (candidateStart + durationMins <= start) {
+          break; // Cabe perfectamente antes de esta actividad
+        }
+        if (candidateStart < end) {
+          candidateStart = end + 10; // Colocar 10 min después
+        }
+      }
+
+      const assignedTime = formatMinutesToHHMM(candidateStart);
+      state.activities.push({
+        id: 'mom-' + Date.now(),
+        title,
+        time: assignedTime,
+        duration: durationMins,
+        category: 'mom',
+        alarmEnabled: true,
+        reminderOffset: 5,
+        completed: false,
+        assignee: 'Mamá',
+        triggeredToday: false,
+        preTriggeredToday: false
+      });
+
+      showToast(`🌿 ¡Listo! Reservamos ${durationMins} min para ti a las ${assignedTime}.`);
+      switchTab('schedule');
+    }
+
+    // Modo Imprevisto: recorre actividades pendientes sin estrés
+    function openUnexpectedModal() {
+      document.getElementById('unexpected-modal').classList.remove('hidden');
+    }
+
+    function closeUnexpectedModal() {
+      document.getElementById('unexpected-modal').classList.add('hidden');
+    }
+
+    function applyUnexpectedShift(shiftMinutes) {
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      let shiftedCount = 0;
+
+      state.activities.forEach(act => {
+        if (!act.completed) {
+          const actMins = parseHHMMToMinutes(act.time);
+          if (actMins >= currentMins - 15) {
+            act.time = formatMinutesToHHMM(actMins + shiftMinutes);
+            act.triggeredToday = false;
+            act.preTriggeredToday = false;
+            shiftedCount++;
+          }
+        }
+      });
+
+      closeUnexpectedModal();
+      renderAll();
+      showToast(`💛 Respira tranquila: recorrimos ${shiftedCount} actividades +${shiftMinutes} min sin culpa.`);
+    }
+
+    // Pendientes rápidos y delegación familiar
+    function addQuickTask(event) {
+      event.preventDefault();
+      const input = document.getElementById('quick-task-input');
+      const title = input.value.trim();
+      if (!title) return;
+
+      state.quickTasks.unshift({
+        id: 'qt-' + Date.now(),
+        title,
+        category: document.getElementById('quick-task-category').value,
+        assignee: document.getElementById('quick-task-assignee').value,
+        completed: false
+      });
+
+      input.value = '';
+      renderQuickTasks();
+      showToast('Pendiente anotado.');
+    }
+
+    function toggleQuickTask(id) {
+      const t = state.quickTasks.find(item => item.id === id);
+      if (t) {
+        t.completed = !t.completed;
+        renderQuickTasks();
+      }
+    }
+
+    function deleteQuickTask(id) {
+      state.quickTasks = state.quickTasks.filter(item => item.id !== id);
+      renderQuickTasks();
+    }
+
+    function promoteTaskToSchedule(id) {
+      const idx = state.quickTasks.findIndex(item => item.id === id);
+      if (idx === -1) return;
+      const task = state.quickTasks[idx];
+      state.quickTasks.splice(idx, 1);
+
+      const now = new Date();
+      const timeStr = formatMinutesToHHMM(now.getHours() * 60 + now.getMinutes() + 20);
+
+      state.activities.push({
+        id: 'act-' + Date.now(),
+        title: task.title,
+        time: timeStr,
+        duration: 30,
+        category: task.category,
+        alarmEnabled: true,
+        reminderOffset: 5,
+        completed: false,
+        assignee: task.assignee,
+        triggeredToday: false,
+        preTriggeredToday: false
+      });
+
+      showToast(`Agendada a las ${timeStr} con alarma activa.`);
+      switchTab('schedule');
+    }
+
+    // Copiar lista familiar al portapapeles usando document.execCommand('copy')
+    function copyFamilyDelegationList() {
+      const familySchedule = state.activities.filter(a => !a.completed && a.assignee !== 'Mamá');
+      const familyTasks = state.quickTasks.filter(t => !t.completed && t.assignee !== 'Mamá');
+
+      let lines = [`🏡 *Equipo Familiar — Apoyo de Hoy (${state.momName})*`, ''];
+      if (familySchedule.length === 0 && familyTasks.length === 0) {
+        lines.push('• Hoy podemos apoyar recogiendo áreas comunes y preparando la mesa. ¡Gracias equipo! ❤️');
+      } else {
+        familySchedule.forEach(a => {
+          lines.push(`⏰ ${a.time} — ${a.title} (Apoyo: ${a.assignee})`);
+        });
+        familyTasks.forEach(t => {
+          lines.push(`✅ ${t.title} (Apoyo: ${t.assignee})`);
+        });
+        lines.push('', '¡Muchas gracias por hacer equipo en casa! 💛');
+      }
+
+      const textToCopy = lines.join('\n');
+      const tempArea = document.createElement('textarea');
+      tempArea.value = textToCopy;
+      tempArea.style.position = 'fixed';
+      tempArea.style.left = '-9999px';
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('📋 Lista familiar copiada. ¡Pégala en el grupo de WhatsApp!');
+      } catch (err) {
+        showToast('No se pudo copiar automáticamente.');
+      }
+      document.body.removeChild(tempArea);
+    }
+
+    // Plantillas de Rutina
+    function applyRoutineTemplate(type) {
+      if (type === 'working') {
+        state.activities = [
+          { id: 'w1', title: 'Desayuno rápido y preparación matutina', time: '07:00', duration: 40, category: 'cocina', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false },
+          { id: 'w2', title: 'Bloque de trabajo / responsabilidades externas', time: '08:30', duration: 180, category: 'trabajo', alarmEnabled: true, reminderOffset: 10, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false },
+          { id: 'w3', title: 'Pausa Mom Time: Comer tranquila y estirar espalda', time: '13:30', duration: 30, category: 'mom', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false },
+          { id: 'w4', title: 'Revisión de tareas escolares y cena ligera', time: '17:30', duration: 60, category: 'hijos', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Pareja', triggeredToday: false, preTriggeredToday: false },
+          { id: 'w5', title: 'Orden express de 20 min en familia', time: '19:30', duration: 20, category: 'hogar', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Familia', triggeredToday: false, preTriggeredToday: false },
+          { id: 'w6', title: 'Descanso nocturno y lectura sin celular', time: '21:00', duration: 30, category: 'mom', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false }
+        ];
+      } else if (type === 'light') {
+        state.activities = [
+          { id: 'l1', title: 'Desayuno relajado en casa', time: '09:00', duration: 45, category: 'cocina', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Pareja', triggeredToday: false, preTriggeredToday: false },
+          { id: 'l2', title: 'Mom Time: Caminata al aire libre o ejercicio', time: '10:30', duration: 40, category: 'mom', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false },
+          { id: 'l3', title: 'Comida sencilla en familia', time: '14:00', duration: 60, category: 'cocina', alarmEnabled: true, reminderOffset: 10, completed: false, assignee: 'Familia', triggeredToday: false, preTriggeredToday: false },
+          { id: 'l4', title: 'Siesta reparadora de la tarde', time: '16:00', duration: 35, category: 'mom', alarmEnabled: true, reminderOffset: 5, completed: false, assignee: 'Mamá', triggeredToday: false, preTriggeredToday: false }
+        ];
+      } else {
+        state.activities = buildInitialSchedule();
+      }
+
+      showToast('✨ Plantilla aplicada con alarmas listas.');
+      switchTab('schedule');
+    }
+
+    // Ajustes y audio
+    function enableAudioAndTest() {
+      SoundEngine.unlock();
+      SoundEngine.playTone(state.selectedTone);
+      showToast('🔔 Sonido de alarmas activado.');
+    }
+
+    function selectAlarmTone(tone) {
+      state.selectedTone = tone;
+      SoundEngine.unlock();
+      SoundEngine.playTone(tone);
+      renderToneSelection();
+    }
+
+    function updateMomName(name) {
+      state.momName = name.trim() || 'Mamá';
+      showToast(`¡Listo, ${state.momName}!`);
+    }
+
+    function updateMomGoal(mins) {
+      state.momTimeGoalMinutes = Number(mins) || 45;
+      renderMomTimeProgress();
+      showToast(`Meta diaria actualizada a ${state.momTimeGoalMinutes} min.`);
+    }
+
+    // Modal PWA
+    function openPwaModal() {
+      document.getElementById('pwa-modal').classList.remove('hidden');
+    }
+
+    function closePwaModal() {
+      document.getElementById('pwa-modal').classList.add('hidden');
+    }
+
+    async function triggerNativePwaInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      closePwaModal();
+    }
+
+    // Utilidades UI
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      el.className = 'bg-plum text-white text-xs sm:text-sm font-medium px-4 py-3 rounded-full shadow-lg max-w-sm transition-all duration-300';
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        setTimeout(() => el.remove(), 300);
+      }, 3400);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      initPwaCapabilities();
+      switchTab('schedule');
+      startClockAndAlarmEngine();
+    });
+  </script>
+</body>
+</html>
